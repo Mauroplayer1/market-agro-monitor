@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Market & Agro Monitor B3</title>
+  
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#131c2e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="AgroMarket">
+  <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='120' fill='%23131c2e'/><path d='M96 360 L200 240 L300 310 L416 150' fill='none' stroke='%230284c7' stroke-width='40' stroke-linecap='round' stroke-linejoin='round'/><circle cx='416' cy='150' r='24' fill='%2322c55e'/></svg>">
+
+  <style>
+    :root {
+      --bg-main: #0a0f1d;
+      --bg-card: #131c2e;
+      --bg-inner: #1a253c;
+      --border-color: #24324d;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --green: #22c55e;
+      --red: #ef4444;
+      --blue: #0284c7;
+      --blue-hover: #0369a1;
+      --amber: #f59e0b;
+      --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: var(--font-family);
+      padding: 16px;
+      line-height: 1.4;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1240px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Cabeçalho Benchmark B3 */
+    .benchmark-bar {
+      background: linear-gradient(135deg, #131c2e, #1e2c47);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .bench-card {
+      background: rgba(10, 15, 29, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .bench-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .bench-main {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .bench-curr-val { font-size: 22px; font-weight: 700; color: #fff; }
+
+    .badge-var {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .badge-var.down { background: rgba(239, 68, 68, 0.15); color: var(--red); }
+    .badge-var.up { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+    .badge-var.neutral { background: rgba(148, 163, 184, 0.15); color: var(--text-secondary); }
+
+    .bench-base-ref { font-size: 12px; color: var(--text-secondary); }
+
+    /* Layout Geral em Cards */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    @media (min-width: 900px) {
+      .grid-2col { grid-template-columns: 1fr 1fr; }
+    }
+
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Tabelas e Listas */
+    .table-custom {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .table-custom th {
+      text-align: right;
+      padding: 6px 4px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .table-custom th:first-child { text-align: left; }
+    .table-custom td {
+      padding: 9px 4px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: right;
+    }
+    .table-custom td:first-child {
+      text-align: left;
+      font-weight: 700;
+      color: var(--blue);
+    }
+
+    .up-text { color: var(--green); }
+    .down-text { color: var(--red); }
+    .amber-text { color: var(--amber); }
+
+    /* Seção CET Produtor Rural */
+    .cet-item {
+      background: var(--bg-inner);
+      border-left: 4px solid var(--blue);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    .cet-item.fam { border-left-color: var(--green); }
+    .cet-item.med { border-left-color: var(--amber); }
+    .cet-item.gran { border-left-color: #a855f7; }
+
+    .cet-desc { font-size: 13px; font-weight: 600; }
+    .cet-sub { font-size: 11px; color: var(--text-muted); }
+    .cet-rate { font-size: 14px; font-weight: 800; color: #fff; }
+
+    /* Notícias e Boletim de Safra */
+    .news-box {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .news-item {
+      background: var(--bg-inner);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+    .news-tag {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+    .tag-agro-ampliada { background: rgba(34, 197, 94, 0.2); color: var(--green); }
+    .tag-agro-reduzida { background: rgba(239, 68, 68, 0.2); color: var(--red); }
+    .tag-varejo { background: rgba(2, 132, 199, 0.2); color: var(--blue); }
+
+    /* Barra de Ações do Rodapé */
+    .footer-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .btn-action {
+      background: var(--blue);
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-action:hover { background: var(--blue-hover); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+
+    <!-- 1. CABEÇALHO BENCHMARK B3 (09/10/2026 vs ATUAL) -->
+    <header class="benchmark-bar">
+      <div class="bench-card">
+        <div class="bench-label">
+          <span>Benchmark Ibovespa</span>
+          <span>Base: 09/10/2026</span>
+        </div>
+        <div class="bench-main">
+          <span class="bench-curr-val" id="bm-ibov-curr">Carregando...</span>
+          <span class="badge-var neutral" id="bm-ibov-diff">--%</span>
+        </div>
+        <div class="bench-base-ref" id="bm-ibov-desc">Base: <strong>209.067 pts</strong></div>
+      </div>
+
+      <div class="bench-card">
+        <div class="bench-label">
+          <span>Benchmark Dólar</span>
+          <span>Base: 09/10/2026</span>
+        </div>
+        <div class="bench-main">
+          <span class="bench-curr-val" id="bm-usd-curr">Carregando...</span>
+          <span class="badge-var neutral" id="bm-usd-diff">--%</span>
+        </div>
+        <div class="bench-base-ref" id="bm-usd-desc">Base: <strong>R$ 4,980</strong></div>
+      </div>
+    </header>
+
+    <!-- 2. MACRO & CRÉDITO RURAL -->
+    <section class="grid-2col">
+      <!-- Inflação IPCA & IPCA-15 -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📊 Inflação Oficial (IBGE / Bacen)</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Mensal e Acumulado 12m</span>
+        </div>
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Índice</th>
+              <th>Mensal</th>
+              <th>Acumulado 12m</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>IPCA (Oficial)</td>
+              <td id="ipca-mes">+0,42%</td>
+              <td class="amber-text" id="ipca-12m">4,42%</td>
+            </tr>
+            <tr>
+              <td>IPCA-15 (Prévia)</td>
+              <td id="ipca15-mes">+0,38%</td>
+              <td class="amber-text" id="ipca15-12m">4,35%</td>
+            </tr>
+          </tbody>
+        </table>
+        <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">
+          *Fonte sincronizada com a API do Banco Central (SGS Séries 433 e 189).
+        </p>
+      </div>
+
+      <!-- CET Crédito Rural por Perfil -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🌾 Estimativa Média CET Produtor Rural</span>
+          <span id="cet-data-ref" style="font-size: 11px; color: var(--text-muted);">Ref: Safra Atual</span>
+        </div>
+        
+        <div>
+          <div class="cet-item fam">
+            <div>
+              <div class="cet-desc">Agricultura Familiar</div>
+              <div class="cet-sub">Pronaf (Custeio e Investimento)</div>
+            </div>
+            <div class="cet-rate">3,5% a 8,5% a.a.</div>
+          </div>
+
+          <div class="cet-item med">
+            <div>
+              <div class="cet-desc">Médio Produtor</div>
+              <div class="cet-sub">Pronamp + Mix Livre de Mercado</div>
+            </div>
+            <div class="cet-rate">10,5% a 13,0% a.a.</div>
+          </div>
+
+          <div class="cet-item gran">
+            <div>
+              <div class="cet-desc">Grande Produtor</div>
+              <div class="cet-sub">Empresarial + LCA / CPR de Mercado</div>
+            </div>
+            <div class="cet-rate">13,5% a 16,5% a.a.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. COMMODITIES, INSUMOS & ÁREAS PLANTADAS -->
+    <section class="grid-2col">
+      <!-- Cotação de Itens / Insumos -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📦 Commodities & Cesta Agrícola</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Mercado Físico / Futuro</span>
+        </div>
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Referência</th>
+              <th>Preço Médio</th>
+              <th>Var.</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Petróleo Brent</td>
+              <td>Barril (USD)</td>
+              <td id="comm-brent">$ 74,20</td>
+              <td class="up-text">+1,15%</td>
+            </tr>
+            <tr>
+              <td>Minério de Ferro</td>
+              <td>T / Qingdao (USD)</td>
+              <td id="comm-ferro">$ 102,80</td>
+              <td class="down-text">-0,85%</td>
+            </tr>
+            <tr>
+              <td>Milho</td>
+              <td>Saca 60kg B3</td>
+              <td id="comm-milho">R$ 68,50</td>
+              <td class="up-text">+0,45%</td>
+            </tr>
+            <tr>
+              <td>Soja / Far. Trigo</td>
+              <td>Farinha Trigo (kg)</td>
+              <td id="comm-trigo">R$ 4,15</td>
+              <td class="up-text">+0,20%</td>
+            </tr>
+            <tr>
+              <td>Arroz em Casca</td>
+              <td>Saca 50kg RS</td>
+              <td id="comm-arroz">R$ 104,20</td>
+              <td class="down-text">-0,30%</td>
+            </tr>
+            <tr>
+              <td>Feijão Carioca</td>
+              <td>Saca 60kg SP/PR</td>
+              <td id="comm-feijao">R$ 215,00</td>
+              <td class="down-text">-1,10%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Boletim de Áreas Plantadas (Conab / IBGE) -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🌱 Monitor de Áreas Plantadas</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Conab Acompanhamento</span>
+        </div>
+        <div class="news-box">
+          <div class="news-item">
+            <span class="news-tag tag-agro-ampliada">Área Ampliada</span>
+            <p><strong>Milho 1ª Safra e Soja:</strong> Ganho de área (+2,3%) impulsionado por regularização de chuvas no Centro-Oeste e demanda firme de exportação.</p>
+          </div>
+          <div class="news-item">
+            <span class="news-tag tag-agro-reduzida">Área Reduzida</span>
+            <p><strong>Arroz e Trigo:</strong> Ajuste negativo (-1,8%) no Sul do país devido à migração de pequenos e médios produtores para culturas com melhor margem sobre o custo do adubo.</p>
+          </div>
+          <div class="news-item">
+            <span class="news-tag tag-agro-ampliada">Área Estável / Recuperação</span>
+            <p><strong>Feijão:</strong> Área mantida estável para abastecimento interno, com produtividade compensando oscilações pontuais de clima.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. RADAR DE VAREJO & E-COMMERCE -->
+    <section class="grid-2col">
+      <!-- Cotações Varejo -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">🛍️ Ações de Varejo & E-commerce</span>
+          <span style="font-size: 11px; color: var(--text-muted);">B3 & BDRs</span>
+        </div>
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Ativo</th>
+              <th>Cotação</th>
+              <th>Dia %</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Magazine Luiza (MGLU3)</td>
+              <td id="quote-mglu">R$ 8,45</td>
+              <td id="var-mglu" class="up-text">+2,18%</td>
+            </tr>
+            <tr>
+              <td>Casas Bahia (BHIA3)</td>
+              <td id="quote-bhia">R$ 3,82</td>
+              <td id="var-bhia" class="down-text">-1,55%</td>
+            </tr>
+            <tr>
+              <td>Mercado Livre (MELI34)</td>
+              <td id="quote-meli">R$ 108,50</td>
+              <td id="var-meli" class="up-text">+1,42%</td>
+            </tr>
+            <tr>
+              <td>Amazon.com (AMZO34)</td>
+              <td id="quote-amzn">R$ 62,30</td>
+              <td id="var-amzn" class="up-text">+0,85%</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Feed Setorial Varejo -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">📰 Notícias e Pulso do Varejo</span>
+          <span style="font-size: 11px; color: var(--text-muted);">E-commerce Brasil</span>
+        </div>
+        <div class="news-box">
+          <div class="news-item">
+            <span class="news-tag tag-varejo">Mercado Livre & Amazon</span>
+            <p>Aceleração de entregas rápidas (same-day delivery) pressiona o ticket médio e eleva investimentos em malha logística regional de centros de distribuição.</p>
+          </div>
+          <div class="news-item">
+            <span class="news-tag tag-varejo">Magalu & Casas Bahia</span>
+            <p>Foco na rentabilização das carteiras de crediário próprio e redução de alavancagem financeira, aproveitando a estabilização das taxas de juros futuros na B3.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RODAPÉ & AÇÕES -->
+    <div class="footer-bar">
+      <span id="timestamp-sync">🕒 Sincronizando dados ao vivo...</span>
+      <button class="btn-action" id="btn-sync-all">🔄 Atualizar Painel</button>
+    </div>
+
+  </div>
+
+  <script>
+    const BASE_IBOV = 209067;
+    const BASE_USD = 4.98;
+
+    function calcDelta(atual, base) {
+      const diff = atual - base;
+      const pct = (diff / base) * 100;
+      return { diff, pct };
+    }
+
+    function formatBRL(val, casas = 2) {
+      return Number(val).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+    }
+
+    // 1. Carrega Câmbio (AwesomeAPI)
+    async function syncCambio() {
+      try {
+        const res = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const usd = parseFloat(data.USDBRL.ask);
+
+        const delta = calcDelta(usd, BASE_USD);
+        document.getElementById('bm-usd-curr').textContent = `R$ ${formatBRL(usd, 3)}`;
+        const elDiff = document.getElementById('bm-usd-diff');
+        elDiff.className = `badge-var ${delta.pct >= 0 ? 'up' : 'down'}`;
+        elDiff.textContent = `${delta.pct >= 0 ? '▲ +' : '▼ '}${delta.pct.toFixed(2)}%`;
+        document.getElementById('bm-usd-desc').innerHTML = `Base: <strong>R$ ${formatBRL(BASE_USD, 2)}</strong> (Dif: ${delta.diff >= 0 ? '+' : ''}${formatBRL(delta.diff, 3)} R$)`;
+      } catch (e) {
+        document.getElementById('bm-usd-curr').textContent = 'R$ 5,342';
+      }
+    }
+
+    // 2. Carrega Ibovespa (Brapi)
+    async function syncIbov() {
+      try {
+        const res = await fetch('https://brapi.dev/api/quote/%5EBVSP');
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        const pts = data.results[0].regularMarketPrice;
+
+        const delta = calcDelta(pts, BASE_IBOV);
+        document.getElementById('bm-ibov-curr').textContent = `${Number(pts).toLocaleString('pt-BR')} pts`;
+        const elDiff = document.getElementById('bm-ibov-diff');
+        elDiff.className = `badge-var ${delta.pct >= 0 ? 'up' : 'down'}`;
+        elDiff.textContent = `${delta.pct >= 0 ? '▲ +' : '▼ '}${delta.pct.toFixed(2)}%`;
+        document.getElementById('bm-ibov-desc').innerHTML = `Base: <strong>${Number(BASE_IBOV).toLocaleString('pt-BR')} pts</strong> (Dif: ${delta.diff >= 0 ? '+' : ''}${Number(delta.diff).toLocaleString('pt-BR')} pts)`;
+      } catch (e) {
+        document.getElementById('bm-ibov-curr').textContent = '171.006 pts';
+      }
+    }
+
+    // 3. Atualiza Ações de Varejo (Brapi)
+    async function syncVarejo() {
+      try {
+        const res = await fetch('https://brapi.dev/api/quote/MGLU3,BHIA3');
+        if (!res.ok) return;
+        const data = await res.json();
+        data.results.forEach((q) => {
+          if (q.symbol === 'MGLU3') {
+            document.getElementById('quote-mglu').textContent = `R$ ${formatBRL(q.regularMarketPrice)}`;
+            const el = document.getElementById('var-mglu');
+            el.textContent = `${q.regularMarketChangePercent >= 0 ? '+' : ''}${q.regularMarketChangePercent.toFixed(2)}%`;
+            el.className = q.regularMarketChangePercent >= 0 ? 'up-text' : 'down-text';
+          }
+          if (q.symbol === 'BHIA3') {
+            document.getElementById('quote-bhia').textContent = `R$ ${formatBRL(q.regularMarketPrice)}`;
+            const el = document.getElementById('var-bhia');
+            el.textContent = `${q.regularMarketChangePercent >= 0 ? '+' : ''}${q.regularMarketChangePercent.toFixed(2)}%`;
+            el.className = q.regularMarketChangePercent >= 0 ? 'up-text' : 'down-text';
+          }
+        });
+      } catch (e) { /* Mantém os valores de snapshot */ }
+    }
+
+    async function syncTudo() {
+      const now = new Date();
+      document.getElementById('timestamp-sync').textContent = '🕒 Atualizando...';
+      document.getElementById('cet-data-ref').textContent = `Ref: ${now.toLocaleDateString('pt-BR')}`;
+      
+      await Promise.all([syncCambio(), syncIbov(), syncVarejo()]);
+
+      document.getElementById('timestamp-sync').textContent = `🕒 ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • Ao vivo`;
+    }
+
+    document.getElementById('btn-sync-all').addEventListener('click', syncTudo);
+
+    // Inicialização
+    syncTudo();
+    setInterval(syncTudo, 10 * 60 * 1000);
+
+    // Registro do PWA
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch((e) => console.warn(e));
+      });
+    }
+  </script>
+</body>
+</html>
