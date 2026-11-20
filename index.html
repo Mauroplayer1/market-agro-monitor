@@ -258,10 +258,12 @@
           <span>Base: 09/10/2026</span>
         </div>
         <div class="bench-main">
-          <span class="bench-curr-val" id="bm-ibov-curr">Carregando...</span>
-          <span class="badge-var neutral" id="bm-ibov-diff">--%</span>
+          <span class="bench-curr-val" id="bm-ibov-curr">171.006 pts</span>
+          <span class="badge-var down" id="bm-ibov-diff">▼ -18,21%</span>
         </div>
-        <div class="bench-base-ref" id="bm-ibov-desc">Base: <strong>209.067 pts</strong></div>
+        <div class="bench-base-ref" id="bm-ibov-desc">
+          Base: <strong>209.067 pts</strong> (Dif: -38.061 pts)
+        </div>
       </div>
 
       <div class="bench-card">
@@ -270,10 +272,12 @@
           <span>Base: 09/10/2026</span>
         </div>
         <div class="bench-main">
-          <span class="bench-curr-val" id="bm-usd-curr">Carregando...</span>
-          <span class="badge-var neutral" id="bm-usd-diff">--%</span>
+          <span class="bench-curr-val" id="bm-usd-curr">R$ 5,342</span>
+          <span class="badge-var up" id="bm-usd-diff">▲ +7,27%</span>
         </div>
-        <div class="bench-base-ref" id="bm-usd-desc">Base: <strong>R$ 4,980</strong></div>
+        <div class="bench-base-ref" id="bm-usd-desc">
+          Base: <strong>R$ 4,980</strong> (Dif: +0,362 R$)
+        </div>
       </div>
     </header>
 
@@ -509,41 +513,54 @@
       return Number(val).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
     }
 
-    // 1. Carrega Câmbio (AwesomeAPI)
+    // Renderizadores dos Benchmarks com cálculo ativo
+    function renderizarBenchmarkIbov(pts) {
+      const delta = calcDelta(pts, BASE_IBOV);
+      document.getElementById('bm-ibov-curr').textContent = `${Number(pts).toLocaleString('pt-BR')} pts`;
+      
+      const elDiff = document.getElementById('bm-ibov-diff');
+      elDiff.className = `badge-var ${delta.pct >= 0 ? 'up' : 'down'}`;
+      elDiff.textContent = `${delta.pct >= 0 ? '▲ +' : '▼ '}${delta.pct.toFixed(2).replace('.', ',')}%`;
+      
+      document.getElementById('bm-ibov-desc').innerHTML = 
+        `Base: <strong>${Number(BASE_IBOV).toLocaleString('pt-BR')} pts</strong> (Dif: ${delta.diff >= 0 ? '+' : ''}${Number(delta.diff).toLocaleString('pt-BR')} pts)`;
+    }
+
+    function renderizarBenchmarkUsd(usd) {
+      const delta = calcDelta(usd, BASE_USD);
+      document.getElementById('bm-usd-curr').textContent = `R$ ${formatBRL(usd, 3)}`;
+      
+      const elDiff = document.getElementById('bm-usd-diff');
+      elDiff.className = `badge-var ${delta.pct >= 0 ? 'up' : 'down'}`;
+      elDiff.textContent = `${delta.pct >= 0 ? '▲ +' : '▼ '}${delta.pct.toFixed(2).replace('.', ',')}%`;
+      
+      document.getElementById('bm-usd-desc').innerHTML = 
+        `Base: <strong>R$ ${formatBRL(BASE_USD, 2)}</strong> (Dif: ${delta.diff >= 0 ? '+' : ''}${formatBRL(delta.diff, 3)} R$)`;
+    }
+
+    // 1. Sincroniza Câmbio (AwesomeAPI)
     async function syncCambio() {
       try {
         const res = await fetch('https://economia.awesomeapi.com.br/last/USD-BRL');
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error('Falha API Cambio');
         const data = await res.json();
         const usd = parseFloat(data.USDBRL.ask);
-
-        const delta = calcDelta(usd, BASE_USD);
-        document.getElementById('bm-usd-curr').textContent = `R$ ${formatBRL(usd, 3)}`;
-        const elDiff = document.getElementById('bm-usd-diff');
-        elDiff.className = `badge-var ${delta.pct >= 0 ? 'up' : 'down'}`;
-        elDiff.textContent = `${delta.pct >= 0 ? '▲ +' : '▼ '}${delta.pct.toFixed(2)}%`;
-        document.getElementById('bm-usd-desc').innerHTML = `Base: <strong>R$ ${formatBRL(BASE_USD, 2)}</strong> (Dif: ${delta.diff >= 0 ? '+' : ''}${formatBRL(delta.diff, 3)} R$)`;
+        renderizarBenchmarkUsd(usd);
       } catch (e) {
-        document.getElementById('bm-usd-curr').textContent = 'R$ 5,342';
+        renderizarBenchmarkUsd(5.342);
       }
     }
 
-    // 2. Carrega Ibovespa (Brapi)
+    // 2. Sincroniza Ibovespa (Brapi)
     async function syncIbov() {
       try {
         const res = await fetch('https://brapi.dev/api/quote/%5EBVSP');
-        if (!res.ok) throw new Error();
+        if (!res.ok) throw new Error('Falha API Ibov');
         const data = await res.json();
         const pts = data.results[0].regularMarketPrice;
-
-        const delta = calcDelta(pts, BASE_IBOV);
-        document.getElementById('bm-ibov-curr').textContent = `${Number(pts).toLocaleString('pt-BR')} pts`;
-        const elDiff = document.getElementById('bm-ibov-diff');
-        elDiff.className = `badge-var ${delta.pct >= 0 ? 'up' : 'down'}`;
-        elDiff.textContent = `${delta.pct >= 0 ? '▲ +' : '▼ '}${delta.pct.toFixed(2)}%`;
-        document.getElementById('bm-ibov-desc').innerHTML = `Base: <strong>${Number(BASE_IBOV).toLocaleString('pt-BR')} pts</strong> (Dif: ${delta.diff >= 0 ? '+' : ''}${Number(delta.diff).toLocaleString('pt-BR')} pts)`;
+        renderizarBenchmarkIbov(pts);
       } catch (e) {
-        document.getElementById('bm-ibov-curr').textContent = '171.006 pts';
+        renderizarBenchmarkIbov(171006);
       }
     }
 
@@ -567,7 +584,7 @@
             el.className = q.regularMarketChangePercent >= 0 ? 'up-text' : 'down-text';
           }
         });
-      } catch (e) { /* Mantém os valores de snapshot */ }
+      } catch (e) {}
     }
 
     async function syncTudo() {
@@ -577,16 +594,21 @@
       
       await Promise.all([syncCambio(), syncIbov(), syncVarejo()]);
 
-      document.getElementById('timestamp-sync').textContent = `🕒 ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • Ao vivo`;
+      document.getElementById('timestamp-sync').textContent = 
+        `🕒 ${now.toLocaleDateString('pt-BR')} ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • Ao vivo`;
     }
 
     document.getElementById('btn-sync-all').addEventListener('click', syncTudo);
 
-    // Inicialização
+    // Renderização inicial instantânea (sem tela em branco ou --%)
+    renderizarBenchmarkIbov(171006);
+    renderizarBenchmarkUsd(5.342);
+
+    // Consulta em tempo real e agendamento de 10 min
     syncTudo();
     setInterval(syncTudo, 10 * 60 * 1000);
 
-    // Registro do PWA
+    // Registro do Service Worker para PWA
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js').catch((e) => console.warn(e));
